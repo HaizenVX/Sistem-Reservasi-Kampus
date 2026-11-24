@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: sipraktis
+    runtime: docker
+    plan: free
+    autoDeployTrigger: off
+    healthCheckPath: /LoginUI.html
+    envVars:
+      - key: PUBLIC_ORIGIN
+        sync: false
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false

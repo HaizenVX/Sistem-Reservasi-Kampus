@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Form Pelaporan Insiden/Kerusakan</title>
+  <link rel="stylesheet" href="reservasi.css">
+  <link rel="stylesheet" href="dashboard.css">
+<style>@view-transition{navigation:auto}</style><script src="motion.js"></script></head>
+<body class="app-layout"><header class="app-topbar" data-shell-placeholder aria-hidden="true"><span>Sistem Peminjaman &amp; Reservasi Fasilitas</span></header>
+  <main class="container">
+    <h1>Form Pelaporan Insiden/Kerusakan</h1>
+    <form id="formPelaporan" class="form">
+      <label>ID Mahasiswa<input id="idMhs" maxlength="15" required></label>
+      <label>Pilih Fasilitas / Ruangan
+        <select id="idFasilitas" required>
+          <option value="FAS001">Auditorium Gedung F</option>
+        </select>
+      </label>
+      <label>Lokasi Spesifik
+        <input id="lokasi" type="text" maxlength="200"
+          placeholder="Lantai 2, dekat pintu masuk" required>
+      </label>
+      <label>Detail Kerusakan
+        <textarea id="detailKerusakan" maxlength="500"
+          required placeholder="Jelaskan detail kerusakan..."></textarea>
+      </label>
+      <label>Unggah Foto Bukti (Maks. 5 MB)
+        <input id="fotoBukti" type="file" accept="image/jpeg,image/png" required>
+      </label>
+      <button type="submit" id="btnKirim">Kirim Laporan</button>
+    </form>
+    <div id="pesan" class="pesan" role="status"></div>
+  <section><h2>Laporan dan Penanganan Insiden</h2><div class="tabel"><table><thead><tr><th>ID Tiket</th><th>Lokasi</th><th>Detail</th><th>Status</th><th>Catatan</th><th>Foto</th><th>Penanganan</th></tr></thead><tbody id="daftarTiket" aria-busy="true" data-loading><tr class="loading-row"><td colspan="7"><span class="sr-only">Memuat data…</span><div class="skeleton-lines" aria-hidden="true"><span></span><span></span><span></span></div></td></tr></tbody></table></div></section>
+  </main>
+
+<script src="api.js"></script>
+<script src="insiden.js"></script>
+</body>
+</html>

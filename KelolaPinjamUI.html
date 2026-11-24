@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verifikasi Peminjaman Alat Multimedia</title>
+  <link rel="stylesheet" href="reservasi.css">
+  <link rel="stylesheet" href="dashboard.css">
+<style>@view-transition{navigation:auto}</style><script src="motion.js"></script></head>
+<body class="app-layout"><header class="app-topbar" data-shell-placeholder aria-hidden="true"><span>Sistem Peminjaman &amp; Reservasi Fasilitas</span></header>
+  <main class="admin-container">
+    <h1>Verifikasi Peminjaman Alat Multimedia</h1>
+
+    <section class="daftar-permohonan">
+      <h2>Daftar Permohonan</h2>
+      <div class="tabel">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Pengajuan</th>
+              <th>ID Mahasiswa</th>
+              <th>Tanggal</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="daftarPengajuan" aria-busy="true" data-loading><tr class="loading-row"><td colspan="5"><span class="sr-only">Memuat data…</span><div class="skeleton-lines" aria-hidden="true"><span></span><span></span><span></span></div></td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div id="pesan" class="pesan" role="status"></div>
+    <section id="panelDetail" style="display: none;">
+      <h2>Detail Permohonan - <span id="detailId"></span></h2>
+      <dl id="detailData">
+        <dt>ID Mahasiswa:</dt><dd id="detMhs"></dd>
+        <dt>Alat:</dt><dd id="detAlat"></dd>
+        <dt>Tanggal:</dt><dd id="detTgl"></dd>
+        <dt>Waktu:</dt><dd id="detWaktu"></dd>
+        <dt>Keperluan:</dt><dd id="detKeperluan"></dd>
+        <dt>Status:</dt><dd id="detStatus"></dd>
+      </dl>
+      <div class="aksi-verifikasi">
+        <button id="btnSetujui" class="setujui"
+          onclick="prosesVerifikasi('Disetujui')">Setujui</button>
+        <button id="btnTolak" class="tolak"
+          onclick="prosesVerifikasi('Ditolak')">Tolak</button>
+      </div>
+      <div id="pesanHasil" class="pesan" role="status"></div>
+    </section>
+  </main>
+
+  
+<script src="api.js"></script>
+  <script src="pinjam.js"></script>
+</body>
+</html>

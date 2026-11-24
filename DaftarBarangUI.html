@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daftar dan Status Kelayakan Barang</title>
+  <link rel="stylesheet" href="reservasi.css">
+  <link rel="stylesheet" href="dashboard.css">
+<style>@view-transition{navigation:auto}</style><script src="motion.js"></script></head>
+<body class="app-layout"><header class="app-topbar" data-shell-placeholder aria-hidden="true"><span>Sistem Peminjaman &amp; Reservasi Fasilitas</span></header>
+  <main class="container">
+    <h1>Daftar dan Status Kelayakan Barang</h1>
+    <section>
+      <h2>Daftar Barang</h2>
+      <form id="tambah" class="filter">
+        <label>Nama Barang
+          <input id="namaBaru" maxlength="100" required>
+        </label>
+        <label>Kategori
+          <select id="kategoriBaru">
+            <option>Elektronik</option><option>Furniture</option>
+          </select>
+        </label>
+        <button>+ Tambah Barang</button>
+      </form>
+      <div class="tabel">
+        <table>
+          <thead>
+            <tr><th>No</th><th>Nama Barang</th><th>Kategori</th><th>Status Kelayakan</th><th>Aksi</th></tr>
+          </thead>
+          <tbody id="daftar" aria-busy="true" data-loading><tr class="loading-row"><td colspan="5"><span class="sr-only">Memuat data…</span><div class="skeleton-lines" aria-hidden="true"><span></span><span></span><span></span></div></td></tr></tbody>
+        </table>
+      </div>
+      <p>Keterangan Status:
+        <span class="label baik">Layak Digunakan</span>
+        <span class="label tunggu">Dalam Perbaikan</span>
+        <span class="label buruk">Tidak Layak / Rusak</span>
+      </p>
+    </section>
+    <section>
+      <h2>Detail Kelayakan Barang</h2>
+      <dl id="detail"></dl>
+      <h3>Informasi Kondisi Fisik</h3>
+      <dl id="kondisiFisik"></dl>
+      <h3>Riwayat Kondisi</h3>
+      <div class="tabel">
+        <table>
+          <thead><tr><th>Tanggal</th><th>Status</th><th>Catatan</th></tr></thead>
+          <tbody id="riwayat"></tbody>
+        </table>
+      </div>
+      <div id="peringatan" class="pesan buruk" role="alert" hidden>
+        Barang ini tidak dapat dipinjam karena statusnya sedang
+        dalam perbaikan / tidak layak.
+      </div>
+      <button id="daftarkanAlat" disabled>Daftarkan sebagai alat multimedia</button>
+      <button id="lanjut" disabled>Lanjutkan Peminjaman</button>
+    </section>
+    <div id="pesan" class="pesan" role="status"></div>
+  </main>
+  
+<script src="api.js"></script>
+  <script>
+    const el = id => document.getElementById(id);
+    const KUNCI = "siprf_barang";
+    const WARNA = {
+      "Layak Digunakan": "baik",
+      "Dalam Perbaikan": "tunggu",
+      "Tidak Layak": "buruk"
+    };
+    let idTerpilih = "";
+
+    async function bacaBarang() { return api('/api/barang'); }
+
+    function labelStatus(teks) {
+      const span = document.createElement("span");
+      span.className = "label " + (WARNA[teks] || "");
+      span.textContent = teks;
+      return span;
+    }
+
+    function pesan(teks, warna) {
+      el("pesan").className = "pesan " + warna;
+      el("pesan").textContent = teks;
+    }
+
+    function tombol(teks, aksi) {
+      const t = document.createElement("button");
+      t.type = "button";
+      t.textContent = teks;
+      t.onclick = aksi;
+      return t;
+    }
+
+    function isiDl(dl, rincian) {
+      dl.replaceChildren();
+      for (const [nama, nilai, status] of rincian) {
+        const label = document.createElement("dt");
+        const isi = document.createElement("dd");
+        label.textContent = nama;
+        if (status) isi.append(labelStatus(nilai));
+        else isi.textContent = nilai;
+        dl.append(label, isi);
+      }
+    }
+
+    async function getDaftarDanStatus() {
+      const data = await bacaBarang();
+      el("daftar").replaceChildren();
+      if (!data.length) {
+        const sel = el("daftar").insertRow().insertCell();
+        sel.colSpan = 5;
+        sel.textContent = "Belum ada data. Silakan tambahkan data baru menggunakan form di atas.";
+      }
+      data.forEach((b, i) => {
+        const baris = el("daftar").insertRow();
+        for (const nilai of [i + 1, b.nama, b.kategori])
+          baris.insertCell().textContent = nilai;
+        baris.insertCell().append(labelStatus(b.status));
+        baris.insertCell().append(
+          tombol("Lihat Detail", () => getDetailKelayakan(b.id)),
+          tombol("Hapus", () => hapusBarang(b.id))
+        );
+      });
+    }
+
+    async function getDetailKelayakan(id) {
+      const b = (await bacaBarang()).find(item => item.id === id);
+      const terakhir = b && b.riwayat[b.riwayat.length - 1];
+      idTerpilih = b ? b.id : "";
+      isiDl(el("detail"), [
+        ["Nama Barang", b ? b.nama : "-"],
+        ["Kategori", b ? b.kategori : "-"],
+        ["Status Kelayakan", b ? b.status : "-", !!b]
+      ]);
+      isiDl(el("kondisiFisik"), [
+        ["Kondisi Terakhir", terakhir ? terakhir.kondisi : "-"],
+        ["Tanggal Inspeksi", terakhir ? terakhir.tanggal : "-"],
+        ["Inspektor", terakhir ? "Admin" : "-"]
+      ]);
+      el("riwayat").replaceChildren();
+      if (!b || !b.riwayat.length) {
+        const sel = el("riwayat").insertRow().insertCell();
+        sel.colSpan = 3;
+        sel.textContent = "-";
+      } else {
+        for (const r of b.riwayat) {
+          const baris = el("riwayat").insertRow();
+          for (const nilai of [r.tanggal, r.kondisi, r.catatan])
+            baris.insertCell().textContent = nilai;
+        }
+      }
+      const layak = !!b && b.status === "Layak Digunakan";
+      el("peringatan").hidden = !b || layak;
+      el("lanjut").disabled = !layak || !b.idAlat;
+      el("lanjut").dataset.alat = b?.idAlat || "";
+      el("daftarkanAlat").disabled = !b || !!b.idAlat;
+    }
+
+    async function hapusBarang(id) {
+      if (!confirm('Hapus barang beserta riwayatnya?')) return;
+      await api('/api/barang/' + encodeURIComponent(id), {method:'DELETE'});
+      if (idTerpilih === id) await getDetailKelayakan("");
+      await getDaftarDanStatus(); pesan("Barang dihapus.", "tunggu");
+    }
+
+    el("tambah").onsubmit = async event => {
+      event.preventDefault();
+      const button=event.target.querySelector('button'); button.disabled=true;
+      try {
+        await api('/api/barang', {method:'POST',button,body:JSON.stringify({nama:el('namaBaru').value.trim(),kategori:el('kategoriBaru').value})});
+        el('namaBaru').value=''; await getDaftarDanStatus(); pesan('Barang berhasil ditambahkan.', 'baik');
+      } catch(e) { tampilError(e); } finally {button.disabled=false;}
+    };
+
+    el("daftarkanAlat").onclick = async () => {
+      await api('/api/alat', {method:'POST',body:JSON.stringify({idBarang:idTerpilih})});
+      await getDetailKelayakan(idTerpilih);pesan('Alat terdaftar. Lakukan inspeksi agar dapat dipinjam.', 'baik');
+    };
+    el("lanjut").onclick = () => {
+      location.href = "FormPinjamUI.html?alat=" + encodeURIComponent(el("lanjut").dataset.alat);
+    };
+
+    window.addEventListener('focus', async () => { await getDaftarDanStatus(); await getDetailKelayakan(idTerpilih); });
+
+    getDaftarDanStatus();
+    getDetailKelayakan("");
+  </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Login · SIPRAKTIS</title>
+  <link rel="stylesheet" href="reservasi.css">
+  <link rel="stylesheet" href="dashboard.css">
+<style>@view-transition{navigation:auto}</style><script src="motion.js"></script></head>
+<body class="login-page">
+  <main class="login-shell">
+    <section class="login-story" aria-label="Layanan Fasilitas Kampus">
+      <div class="login-intro">
+        <div class="login-brand">SIPRAKTIS</div>
+        <h1>Layanan fasilitas<br>kampus.</h1>
+        <p>Reservasi Ruangan · Peminjaman Alat · Laporan Insiden</p>
+      </div>
+    </section>
+    <section class="login-card">
+      <h2>Selamat datang</h2>
+      <p>Login ke akun Anda untuk melanjutkan.</p>
+      <form id="loginForm">
+        <label>Username<input id="username" autocomplete="username" maxlength="50" placeholder="Username" required autofocus></label>
+        <label>Password<input id="password" type="password" autocomplete="current-password" maxlength="200" placeholder="Masukkan password Anda" required></label>
+        <button id="masuk" type="submit">Login</button>
+      </form>
+      <div id="pesan" class="pesan" role="alert"></div>
+    </section>
+  </main>
+  
+<script src="login.js"></script>
+</body>
+</html>

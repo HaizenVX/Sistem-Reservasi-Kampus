@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Peminjaman Alat Multimedia</title>
+  <link rel="stylesheet" href="reservasi.css">
+  <link rel="stylesheet" href="dashboard.css">
+<style>@view-transition{navigation:auto}</style><script src="motion.js"></script></head>
+<body class="app-layout"><header class="app-topbar" data-shell-placeholder aria-hidden="true"><span>Sistem Peminjaman &amp; Reservasi Fasilitas</span></header>
+  <main class="container">
+    <h1>Peminjaman Alat Multimedia</h1>
+
+    <section class="ketersediaan-alat">
+      <h2>Tabel Ketersediaan Alat</h2>
+      <div class="tabel">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th><th>Nama Alat</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="daftarAlat" aria-busy="true" data-loading><tr class="loading-row"><td colspan="3"><span class="sr-only">Memuat data…</span><div class="skeleton-lines" aria-hidden="true"><span></span><span></span><span></span></div></td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="form-peminjaman">
+      <h2>Form Peminjaman</h2>
+      <form id="formPinjam" class="form">
+        <label>ID Mahasiswa<input id="idMhs" maxlength="15" required></label>
+        <label>Pilih Alat
+          <select id="idAlat" required><option value="">-- Pilih --</option></select>
+        </label>
+        <label>Tanggal
+          <input id="tglPinjam" type="date" required>
+        </label>
+        <label>Waktu
+          <input id="waktu" type="time" required>
+        </label>
+        <label>Keperluan
+          <textarea id="keperluan" maxlength="255" required
+            placeholder="Masukkan keperluan peminjaman alat"></textarea>
+        </label>
+        <button type="submit" id="btnAjukan">Ajukan Pinjaman</button>
+      </form>
+      <div id="pesan" class="pesan" role="status"></div>
+    </section>
+  </main>
+
+  
+<script src="api.js"></script>
+  <script src="pinjam.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+**
+!*.java
+!*.html
+!*.css
+!*.js
+!sql/
+!sql/schema.sql
+!Dockerfile

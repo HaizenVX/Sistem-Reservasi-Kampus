@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inspeksi Kelayakan Barang</title>
+  <link rel="stylesheet" href="reservasi.css">
+  <link rel="stylesheet" href="dashboard.css">
+<style>@view-transition{navigation:auto}</style><script src="motion.js"></script></head>
+<body class="app-layout"><header class="app-topbar" data-shell-placeholder aria-hidden="true"><span>Sistem Peminjaman &amp; Reservasi Fasilitas</span></header>
+  <main class="admin">
+    <h1>Inspeksi Kelayakan Barang</h1>
+    <section>
+      <h2>Daftar Barang</h2>
+      <p>Untuk menambahkan barang, buka <a href="DaftarBarangUI.html">Kelola barang</a>.</p>
+      <div class="tabel">
+        <table>
+          <thead>
+            <tr>
+              <th>No</th><th>Nama Barang</th><th>Kategori</th>
+              <th>Status Kelayakan</th><th>Terakhir Diperiksa</th><th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="daftar" aria-busy="true" data-loading><tr class="loading-row"><td colspan="6"><span class="sr-only">Memuat data…</span><div class="skeleton-lines" aria-hidden="true"><span></span><span></span><span></span></div></td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section>
+      <h2>Detail &amp; Riwayat Kondisi</h2>
+      <dl id="detail"></dl>
+      <div class="tabel">
+        <table>
+          <thead><tr><th>Tanggal</th><th>Kondisi</th><th>Catatan</th><th>Aksi</th></tr></thead>
+          <tbody id="riwayat"></tbody>
+        </table>
+      </div>
+    </section>
+    <section>
+      <h2>Form Inspeksi Barang</h2>
+      <form id="inspeksi" class="form">
+        <label>Nama Barang
+          <input id="namaBarang" readonly placeholder="Pilih barang terlebih dahulu...">
+        </label>
+        <label>Kriteria Kondisi Fisik
+          <select id="kondisi">
+            <option value="">Pilih kondisi</option>
+            <option>Layak</option><option>Rusak Ringan</option><option>Rusak Berat</option>
+          </select>
+        </label>
+        <label>Catatan Rekomendasi
+          <textarea id="catatan" maxlength="255"
+            placeholder="Masukkan catatan rekomendasi perbaikan atau tindakan penanganan..."></textarea>
+        </label>
+        <button>Submit Hasil Inspeksi</button>
+      </form>
+    </section>
+    <div class="hasil">
+      <strong>Pesan hasil pemrosesan</strong>
+      <div id="pesan" class="pesan" role="status">—</div>
+    </div>
+  </main>
+  
+<script src="api.js"></script>
+  <script>
+    const el = id => document.getElementById(id);
+    const KUNCI = "siprf_barang";
+    const STATUS = {
+      "Layak": "Layak Digunakan",
+      "Rusak Ringan": "Dalam Perbaikan",
+      "Rusak Berat": "Tidak Layak"
+    };
+    const WARNA = {
+      "Layak Digunakan": "baik",
+      "Dalam Perbaikan": "tunggu",
+      "Tidak Layak": "buruk"
+    };
+    let idTerpilih = "";
+
+    async function bacaBarang() { return api('/api/barang'); }
+
+    function labelStatus(teks) {
+      const span = document.createElement("span");
+      span.className = "label " + (WARNA[teks] || "");
+      span.textContent = teks;
+      return span;
+    }
+
+    function pesan(teks, warna) {
+      el("pesan").className = "pesan " + warna;
+      el("pesan").textContent = teks;
+    }
+
+    function kosong(tbody, kolom) {
+      const sel = tbody.insertRow().insertCell();
+      sel.colSpan = kolom;
+      sel.textContent = tbody.id === "daftar" ? "Belum ada barang. Tambahkan melalui menu Barang." : "Belum ada riwayat inspeksi.";
+    }
+
+    function tombol(teks, aksi) {
+      const t = document.createElement("button");
+      t.type = "button";
+      t.textContent = teks;
+      t.onclick = aksi;
+      return t;
+    }
+
+    async function getDaftarBarang() {
+      const data = await bacaBarang();
+      el("daftar").replaceChildren();
+      if (!data.length) kosong(el("daftar"), 6);
+      data.forEach((b, i) => {
+        const baris = el("daftar").insertRow();
+        for (const nilai of [i + 1, b.nama, b.kategori])
+          baris.insertCell().textContent = nilai;
+        baris.insertCell().append(labelStatus(b.status));
+        baris.insertCell().textContent = b.terakhir;
+        baris.insertCell().append(
+          tombol("Pilih", () => getFormInspeksi(b.id)),
+          tombol("Hapus", () => hapusBarang(b.id))
+        );
+      });
+    }
+
+    async function getFormInspeksi(id) {
+      const b = (await bacaBarang()).find(item => item.id === id);
+      idTerpilih = b ? b.id : "";
+      el("namaBarang").value = b ? b.nama : "";
+      el("detail").replaceChildren();
+      el("riwayat").replaceChildren();
+      const rincian = [
+        ["Nama Barang", b ? b.nama : "-"],
+        ["Kategori", b ? b.kategori : "-"],
+        ["ID Barang", b ? b.id : "-"],
+        ["Status Saat Ini", b ? b.status : "-"]
+      ];
+      for (const [nama, nilai] of rincian) {
+        const label = document.createElement("dt");
+        const isi = document.createElement("dd");
+        label.textContent = nama;
+        if (nama === "Status Saat Ini" && b)
+          isi.append(labelStatus(nilai));
+        else isi.textContent = nilai;
+        el("detail").append(label, isi);
+      }
+      if (!b || !b.riwayat.length) {
+        const sel = el("riwayat").insertRow().insertCell();
+        sel.colSpan = 4;
+        sel.textContent = "-";
+        return;
+      }
+      for (const r of b.riwayat) {
+        const baris = el("riwayat").insertRow();
+        for (const nilai of [r.tanggal, r.kondisi, r.catatan])
+          baris.insertCell().textContent = nilai;
+        baris.insertCell().append(tombol("Hapus", () => hapusRiwayat(r.id)));
+      }
+    }
+
+    async function validasiDanSimpan() {
+      const button=el('inspeksi').querySelector('button');button.disabled=true;
+      try {
+        const result=await api('/api/inspeksi', {method:'POST',button,body:JSON.stringify({idBarang:idTerpilih,kondisi:el('kondisi').value,catatan:el('catatan').value.trim()})});
+        el('kondisi').value='';el('catatan').value='';await getDaftarBarang();await getFormInspeksi(idTerpilih);
+        pesan(result.message + ' — ' + result.id,'baik');
+      } catch(e) {tampilError(e);} finally {button.disabled=false;}
+    }
+
+    async function hapusBarang(id) {
+      if (!confirm('Hapus barang beserta riwayatnya?')) return;
+      await api('/api/barang/' + encodeURIComponent(id), {method:'DELETE'});
+      if (idTerpilih === id) await getFormInspeksi("");
+      await getDaftarBarang(); pesan("Barang dihapus.", "tunggu");
+    }
+
+    async function hapusRiwayat(id) {
+      if (!confirm('Hapus riwayat inspeksi ini?')) return;
+      await api('/api/inspeksi/' + encodeURIComponent(id), {method:'DELETE'});
+      await getDaftarBarang(); await getFormInspeksi(idTerpilih);
+      pesan('Riwayat dihapus; kondisi dan status diperbarui.', 'baik');
+    }
+
+    el("inspeksi").onsubmit = event => {
+      event.preventDefault();
+      validasiDanSimpan();
+    };
+
+    window.addEventListener('focus', async () => { await getDaftarBarang(); await getFormInspeksi(idTerpilih); });
+
+    getDaftarBarang();
+    getFormInspeksi("");
+  </script>
+</body>
+</html>

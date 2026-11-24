@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reservasi Ruangan</title>
+  <link rel="stylesheet" href="reservasi.css">
+  <link rel="stylesheet" href="dashboard.css">
+<style>@view-transition{navigation:auto}</style><script src="motion.js"></script></head>
+<body class="app-layout"><header class="app-topbar" data-shell-placeholder aria-hidden="true"><span>Sistem Peminjaman &amp; Reservasi Fasilitas</span></header>
+  <main>
+    <h1>Reservasi Ruangan</h1>
+
+    <form id="filter" class="filter">
+      <label>Tanggal
+        <input id="tanggal" type="date" value="2026-10-20" required>
+      </label>
+      <label>Waktu
+        <input id="waktu" type="time" value="09:00" required>
+      </label>
+      <button>Cek Ketersediaan</button>
+    </form>
+
+    <h2>Ketersediaan Ruangan</h2>
+    <div class="tabel">
+      <table>
+        <thead>
+          <tr><th>Nama Ruangan</th><th>Status</th></tr>
+        </thead>
+        <tbody id="daftar" aria-busy="true" data-loading><tr class="loading-row"><td colspan="2"><span class="sr-only">Memuat data…</span><div class="skeleton-lines" aria-hidden="true"><span></span><span></span><span></span></div></td></tr></tbody>
+      </table>
+    </div>
+
+    <form id="pengajuan">
+      <label>Ruangan
+        <select id="ruangan" required></select>
+      </label>
+      <label>Keperluan
+        <textarea id="keperluan" maxlength="255" required
+          placeholder="Contoh: Seminar mahasiswa"></textarea>
+      </label>
+      <button id="ajukan">Ajukan Reservasi</button>
+    </form>
+
+    <div id="pesan" class="pesan" role="status"></div>
+  </main>
+
+  
+<script src="api.js"></script>
+  <script src="data-reservasi.js"></script>
+  <script>
+    const el = id => document.getElementById(id);
+    let jadwalDicek = "";
+
+    function pesan(teks, warna) {
+      el("pesan").className = "pesan " + warna;
+      el("pesan").textContent = teks;
+    }
+
+    async function cek() {
+      const tanggal = el("tanggal").value;
+      const waktu = el("waktu").value;
+      await muatRuangan();
+      const data = await api('/api/jadwal');
+
+      jadwalDicek = tanggal + "|" + waktu;
+      el("daftar").replaceChildren();
+      el("ruangan").replaceChildren();
+      pesan("", "");
+
+      for (const nama of RUANGAN) {
+        const bebas = tersedia(nama, tanggal, waktu, data);
+        const baris = el("daftar").insertRow();
+        baris.insertCell().textContent = nama;
+        baris.insertCell().append(
+          labelStatus(bebas ? "Tersedia" : "Tidak tersedia")
+        );
+        if (bebas) el("ruangan").add(new Option(nama, nama));
+      }
+
+      el("ajukan").disabled = el("ruangan").options.length === 0;
+      if (el("ajukan").disabled) {
+        pesan("Tidak ada ruangan tersedia. Pilih tanggal atau waktu lain.", "buruk");
+      }
+    }
+
+    el("filter").onsubmit = event => {
+      event.preventDefault();
+      cek();
+    };
+
+    el("filter").oninput = () => {
+      jadwalDicek = "";
+      el("daftar").replaceChildren();
+      el("ruangan").replaceChildren();
+      el("ajukan").disabled = true;
+      pesan("Jadwal berubah. Klik Cek Ketersediaan untuk melihat hasilnya.", "tunggu");
+    };
+
+    el("pengajuan").onsubmit = async event => {
+      event.preventDefault();
+
+      const tanggal = el("tanggal").value;
+      const waktu = el("waktu").value;
+      const ruangan = el("ruangan").value;
+      const keperluan = el("keperluan").value.trim();
+      const data = await api('/api/jadwal');
+
+      if (!keperluan) {
+        pesan("Isi keperluan reservasi terlebih dahulu.", "buruk");
+        el("keperluan").focus();
+        return;
+      }
+
+      if (jadwalDicek !== tanggal + "|" + waktu ||
+          !tersedia(ruangan, tanggal, waktu, data)) {
+        await cek();
+        pesan("Jadwal atau ketersediaan berubah. Periksa kembali pilihanmu.", "buruk");
+        return;
+      }
+
+      el('ajukan').disabled=true;
+      try {
+        await api('/api/reservasi', {method:'POST',button:el('ajukan'),body:JSON.stringify({idRuangan:daftarRuangan.find(r=>r.namaRuangan===ruangan)?.idRuangan,tanggal,waktu,keperluan})});
+      } catch(e) {el('ajukan').disabled=false;throw e;}
+
+      pesan("✓ Pengajuan berhasil disimpan. ", "baik");
+      el("pesan").append(
+        document.createElement("br"),
+        "Status: ",
+        labelStatus(MENUNGGU)
+      );
+      el("ajukan").disabled = true;
+    };
+
+    el("tanggal").value = new Date().toLocaleDateString("sv-SE");
+    cek();
+
+    window.addEventListener('focus', cek);
+  </script>
+</body>
+</html>

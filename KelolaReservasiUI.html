@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kelola Reservasi Ruangan</title>
+  <link rel="stylesheet" href="reservasi.css">
+  <link rel="stylesheet" href="dashboard.css">
+<style>@view-transition{navigation:auto}</style><script src="motion.js"></script></head>
+<body class="app-layout"><header class="app-topbar" data-shell-placeholder aria-hidden="true"><span>Sistem Peminjaman &amp; Reservasi Fasilitas</span></header>
+  <main class="admin">
+    <h1>Kelola Reservasi Ruangan</h1>
+
+    <h2>Daftar Pengajuan</h2>
+    <div class="tabel">
+      <table>
+        <thead>
+          <tr>
+            <th>ID Reservasi</th><th>Ruangan</th><th>Tanggal</th>
+            <th>Status</th><th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="daftar" aria-busy="true" data-loading><tr class="loading-row"><td colspan="5"><span class="sr-only">Memuat data…</span><div class="skeleton-lines" aria-hidden="true"><span></span><span></span><span></span></div></td></tr></tbody>
+      </table>
+    </div>
+
+    <section id="panel">
+      <h2>Detail Pengajuan</h2>
+      <dl id="detail"></dl>
+      <div class="aksi">
+        <button class="setujui" id="setujui">Setujui</button>
+        <button class="tolak" id="tolak">Tolak</button>
+      </div>
+      <div class="hasil">
+        <strong>Pesan hasil pemrosesan</strong>
+        <p id="hasil" role="status">—</p>
+      </div>
+    </section>
+  </main>
+
+  
+<script src="api.js"></script>
+  <script src="data-reservasi.js"></script>
+  <script>
+    const el = id => document.getElementById(id);
+    let idTerpilih;
+
+    async function tampilkan() {
+      const data = await bacaReservasi();
+      if (!idTerpilih) idTerpilih=data[0]?.id;
+      el("daftar").replaceChildren();
+
+      for (const r of data) {
+        const baris = el("daftar").insertRow();
+        for (const nilai of [r.id, r.ruangan, formatTanggal(r.tanggal)]) {
+          baris.insertCell().textContent = nilai;
+        }
+        baris.insertCell().append(labelStatus(r.status));
+
+        const tombol = document.createElement("button");
+        tombol.textContent = "Lihat Detail";
+        tombol.onclick = () => {
+          idTerpilih = r.id;
+          el("hasil").textContent = "—";
+          el("hasil").className = "";
+          tampilkan();
+        };
+        baris.insertCell().append(tombol);
+      }
+
+      const r = data.find(item => item.id === idTerpilih);
+      el("panel").hidden = !r;
+      if (!r) return;
+
+      el("detail").replaceChildren();
+      const rincian = [
+        ["ID Reservasi", r.id],
+        ["Ruangan", r.ruangan],
+        ["Tanggal", formatTanggal(r.tanggal)],
+        ["Waktu", r.waktu],
+        ["Keperluan", r.keperluan],
+        ["Status", r.status]
+      ];
+
+      for (const [nama, nilai] of rincian) {
+        const label = document.createElement("dt");
+        const isi = document.createElement("dd");
+        label.textContent = nama;
+        if (nama === "Status") isi.append(labelStatus(nilai));
+        else isi.textContent = nilai;
+        el("detail").append(label, isi);
+      }
+
+      el("setujui").disabled = el("tolak").disabled = r.status !== MENUNGGU;
+    }
+
+    async function proses(keputusan) {
+      el('setujui').disabled=el('tolak').disabled=true;
+      try {
+        const result=await api('/api/reservasi/'+encodeURIComponent(idTerpilih), {method:'POST',button:el(keputusan==='Disetujui'?'setujui':'tolak'),body:JSON.stringify({keputusan})});
+        el('hasil').textContent=result.message;el('hasil').className='pesan '+(keputusan==='Disetujui'?'baik':'buruk');
+      } catch(e) {tampilError(e);} finally {await tampilkan();}
+    }
+
+    el("setujui").onclick = () => proses("Disetujui");
+    el("tolak").onclick = () => proses("Ditolak");
+
+    window.addEventListener('focus', tampilkan);
+
+    tampilkan();
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+async function muatDashboard(){
+ const user=await appReady;
+ const [stats,reservasi,pengajuan,insiden]=await Promise.all(['/api/dashboard','/api/reservasi','/api/pengajuan','/api/insiden'].map(p=>api(p)));
+ if(document.getElementById('salam')){
+  document.getElementById('salam').textContent='Halo, '+(user.role==='admin'?'Admin':'Mahasiswa')+'.';document.getElementById('pengantar').textContent=user.role==='admin'?'Pantau fasilitas kampus dan tindak lanjuti pengajuan dalam satu tempat.':'Rencanakan kegiatanmu. Semua layanan fasilitas tersedia dari sini.';
+  const cards=[[user.role==='admin'?'Total barang':'Peminjaman saya',user.role==='admin'?stats.barang:stats.pengajuan,'Inventaris & peralatan'],['Menunggu persetujuan',stats.menunggu,'Reservasi dan peminjaman'],['Reservasi disetujui',stats.reservasi,'Ruangan untuk kegiatan'],['Insiden belum selesai',stats.insiden,'Laporan dalam penanganan']];
+  const box=document.getElementById('statistik');box.replaceChildren();for(const [label,value,note]of cards){const card=document.createElement('article');card.className='stat-card';const l=document.createElement('span');l.textContent=label;const n=document.createElement('strong');n.textContent=value;const t=document.createElement('small');t.textContent=note;card.append(l,n,t);box.append(card);}
+  const services=user.role==='admin'?[['Verifikasi reservasi','Tinjau jadwal dan keputusan ruangan.','KelolaReservasiUI.html'],['Verifikasi peminjaman','Proses permohonan alat mahasiswa.','KelolaPinjamUI.html'],['Inspeksi barang','Periksa kondisi dan kelayakan alat.','InspeksiUII.html'],['Tangani insiden','Tindak lanjuti laporan kerusakan.','FormLaporanInsidenUI.html']]:[['Reservasi ruangan','Temukan ruangan untuk kegiatanmu.','ReservasiUI.html'],['Pinjam peralatan','Ajukan alat multimedia yang tersedia.','FormPinjamUI.html'],['Laporkan insiden','Sampaikan kendala beserta foto bukti.','FormLaporanInsidenUI.html'],['Pantau pengajuan','Lihat perkembangan pengajuanmu.','PengajuanSayaUI.html']];
+  const links=document.getElementById('layanan');links.replaceChildren();for(const [title,note,url]of services){const a=document.createElement('a');a.className='service-card';a.href=url;const h=document.createElement('strong');h.textContent=title+' ↗';const p=document.createElement('span');p.textContent=note;a.append(h,p);links.append(a);}
+ }
+ UiMotion.revealCards(document.getElementById('statistik'));
+ UiMotion.revealCards(document.getElementById('layanan'));
+ const rows=[...reservasi.map(r=>['Reservasi',r.id,r.ruangan+' · '+r.tanggal,r.status]),...pengajuan.map(p=>['Peminjaman',p.id,p.alat+' · '+p.tgl,p.status]),...insiden.map(t=>['Insiden',t.idTiket,t.lokasi,t.statusPenanganan])];
+ const tbody=document.getElementById('aktivitas');tbody.replaceChildren();for(const row of rows.reverse().slice(0,document.getElementById('salam')?8:rows.length)){const tr=tbody.insertRow();row.forEach((value,i)=>{const td=tr.insertCell();if(i===3){const badge=document.createElement('span');badge.className='label '+(['Disetujui','Selesai'].includes(value)?'baik':value==='Ditolak'?'buruk':'tunggu');badge.textContent=value;td.append(badge);}else td.textContent=value;});}
+ if(!rows.length){const cell=tbody.insertRow().insertCell();cell.colSpan=4;cell.className='empty-state';cell.textContent='Belum ada pengajuan. Mulai melalui menu layanan di sebelah kiri.';}
+}
+const refreshButton=document.getElementById('refresh');
+if(refreshButton)refreshButton.onclick=async event=>{const button=event.currentTarget;button.disabled=true;const finishLoading=UiMotion.loading(button);try{await muatDashboard();}finally{finishLoading();button.disabled=false;}};muatDashboard();window.addEventListener('focus',muatDashboard);

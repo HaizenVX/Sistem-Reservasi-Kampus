@@ -1,0 +1,7 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Impor Data Lama</title><link rel="stylesheet" href="reservasi.css">  <link rel="stylesheet" href="dashboard.css">
+<style>@view-transition{navigation:auto}</style><script src="motion.js"></script></head>
+<body class="app-layout"><header class="app-topbar" data-shell-placeholder aria-hidden="true"><span>Sistem Peminjaman &amp; Reservasi Fasilitas</span></header><main><h1>Impor Data Lama</h1><section><p>Data asal tidak dihapus. Impor menolak ID yang bertabrakan dan membatalkan seluruh transaksi jika ada data tidak valid.</p>
+<p>Jika dahulu membuka HTML melalui file://, buka halaman asal tersebut dan ekspor localStorage menggunakan petunjuk README. Data browser dari alamat berbeda tidak dapat dibaca otomatis.</p>
+<button id="baca">Baca data browser pada alamat ini</button><label>Atau pilih JSON hasil ekspor<input id="berkas" type="file" accept="application/json,.json"></label>
+<label>Pratinjau data<textarea id="data" rows="15" placeholder='{"barang":[],"reservasi":[]}'></textarea></label><button id="impor">Impor data yang ditampilkan</button></section><div id="pesan" class="pesan" role="status"></div></main>
+<script src="api.js"></script><script src="migrasi.js"></script></body></html>
