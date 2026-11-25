@@ -31,6 +31,7 @@ async function stop(){await new Promise(r=>{server.once('exit',r);server.kill();
  await req('/api/reservasi/'+legacy,null,student,'GET',404);check(true,'Data admin tidak diklaim mahasiswa');
  await stop();await start();check((await req('/api/me',null,student)).data.username==='mahasiswa','Sesi tetap valid setelah restart Java');
  await req('/api/logout',{},student);await req('/api/me',null,student,'GET',401);check(true,'Logout mencabut sesi di backend');
+ await require('./public-access.cjs')({base,check,req});
  await require('./browser.cjs')({base,check});
  console.log('TOTAL '+checks+' CHECKS PASSED');
 }finally{await stop();}})().catch(e=>{console.error(e);process.exitCode=1;});

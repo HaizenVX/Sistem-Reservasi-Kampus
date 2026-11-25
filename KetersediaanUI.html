@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ketersediaan · SIPRAKTIS</title>
+  <link rel="stylesheet" href="reservasi.css">
+  <link rel="stylesheet" href="ketersediaan.css">
+  <style>@view-transition{navigation:auto}</style>
+</head>
+<body>
+  <header class="public-header"><a href="LoginUI.html" class="public-brand">SIPRAKTIS</a><a href="LoginUI.html">Login ke akun →</a></header>
+  <main>
+    <h1>Ketersediaan fasilitas kampus</h1>
+    <p>Cek ruangan, alat multimedia, dan kelayakan barang tanpa login. Login untuk mengajukan reservasi, peminjaman, atau laporan insiden.</p>
+    <nav class="public-nav" aria-label="Layanan pengunjung"><a href="#ruangan">Ruangan</a><a href="#alat">Alat multimedia</a><a href="#barang">Kelayakan barang</a></nav>
+    <div id="pesan" role="status" aria-live="polite"></div>
+    <section id="ruangan">
+      <h2>Ketersediaan ruangan</h2>
+      <form id="cekForm"><label>Tanggal<input id="tanggal" type="date" required></label><label>Waktu<input id="waktu" type="time" step="60" required value="08:00"></label><button id="cek" type="submit">Cek ketersediaan</button></form>
+      <p id="jadwalInfo">Pilih tanggal dan waktu untuk mengecek jadwal.</p>
+      <div class="public-table"><table><thead><tr><th>Ruangan</th><th>Status</th></tr></thead><tbody id="rooms"></tbody></table></div>
+      <a class="public-action" href="ReservasiUI.html">Login untuk reservasi →</a>
+    </section>
+    <section id="alat"><h2>Ketersediaan alat multimedia</h2><p>Status alat saat ini mengikuti data peminjaman dan kelayakan barang.</p><div class="public-table"><table><thead><tr><th>Alat</th><th>Status</th></tr></thead><tbody id="tools"></tbody></table></div><a class="public-action" href="FormPinjamUI.html">Login untuk peminjaman →</a></section>
+    <section id="barang"><h2>Status kelayakan barang</h2><div class="public-table"><table><thead><tr><th>Barang</th><th>Kategori</th><th>Kondisi</th><th>Kelayakan</th><th>Terakhir diperiksa</th></tr></thead><tbody id="items"></tbody></table></div><a class="public-action" href="FormLaporanInsidenUI.html">Login untuk melaporkan insiden →</a></section>
+  </main>
+  <script src="ketersediaan.js"></script>
+</body>
+</html>

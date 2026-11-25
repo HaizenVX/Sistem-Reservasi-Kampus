@@ -41,13 +41,13 @@ public class ApiServer {
                 wajib(method.equals("GET"),405,"Method tidak didukung");
                 String file=path.equals("/")?"DashboardUI.html":path.substring(1);
                 String pageRole=null;
-                if(file.endsWith(".html")&&!file.equals("LoginUI.html")){
+                if(file.endsWith(".html")&&!file.equals("LoginUI.html")&&!file.equals("KetersediaanUI.html")){
                     Auth.User u=Database.transaksi(false,()->Auth.user(ex));
                     if(u==null){ex.getResponseHeaders().set("Location","/LoginUI.html");ex.sendResponseHeaders(302,-1);return;}
                     if(!Auth.page(u,file)){ex.getResponseHeaders().set("Location","/DashboardUI.html");ex.sendResponseHeaders(302,-1);return;}
                     pageRole=u.admin()?"admin":"mahasiswa";
                 }
-                wajib(FILES.contains(file),404,"Halaman tidak ditemukan");
+                wajib(FILES.contains(file)||Set.of("KetersediaanUI.html","ketersediaan.js","ketersediaan.css").contains(file),404,"Halaman tidak ditemukan");
                 String mime=file.endsWith(".html")?"text/html":file.endsWith(".css")?"text/css":"text/javascript";
                 byte[] content=Files.readAllBytes(Path.of(file));
                 // Peran untuk tampilan awal berasal dari sesi yang sudah diverifikasi,
@@ -73,6 +73,7 @@ public class ApiServer {
             }
             final JsonObject data=body;
             Object result=Database.transaksi(write,()->{
+                if(path.equals("/api/publik/ketersediaan")&&method.equals("GET"))return PublicAvailability.data(ex.getRequestURI());
                 if(path.equals("/api/login")&&method.equals("POST"))return Auth.login(ex,data);
                 Auth.User u=Auth.user(ex);
                 if(path.equals("/api/me")&&method.equals("GET")){wajib(u!=null,401,"Silakan login");return u;}
